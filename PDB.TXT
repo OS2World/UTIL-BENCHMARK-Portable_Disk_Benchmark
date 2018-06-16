@@ -1,0 +1,88 @@
+Portable Disk Benchmark (PDB) V0.01  03/09/94
+
+PDB is written to be a simple Disk Benchmark test for testing disk AND
+cache performance across different platforms.  The code should compile
+with most C compilers.  I've enclosed precompiled versions for DOS,
+OS/2 16-bit and OS/2 32-bit.  The compiler I used are MSC 6.0a and IBM
+C Set++ 2.0.  Care has been taken to minimize compiler dependency so
+the results should be accurate enough for cross platform comparison.
+When compiling, try to use the most aggressive compiler optimization
+options.  This will help eliminate overhead in the compiled code.  Also
+note that the Large memory model should be used when you're using a 16-bit
+compiler.
+
+PDB uses open/read/write calls.  These are unbuffered I/O calls and are
+available to all C compilers.  I've done some tests, and the program
+appears to have consistent result whether I compile it with 16-bit or
+32-bit OS/2 compiler (MSC 6 vs IBM C Set++).  The only function I used
+which may not be available on some UNIX platforms is ftime (and the timeb
+struct).  The reason I use this is because it provides a millisecond
+timer accuracy, and I don't know of any other portable way of doing
+it (under the PC, this is only good to the hundredth of a sec accuracy).
+Since the calls are unbuffered, the disk cache must work hard to keep
+things fast.
+
+The test is divided into 2 parts:
+
+Part 1:
+Sequential write to create the file
+Random read
+Random write with the same data
+
+Part 2:
+Sequential read of the entire file
+Random read
+Random write of changed data
+
+There should be a disk cache flush between part 1 and 2, but I haven't
+found a way to do this, and in most case, this is not under the program's
+control.  Because of this, the sequential read time will be much higher
+for large file size due to cache flushing.
+
+The random read/write is restricted to only 1MB of data regardless of
+file size or block size.  The random seed is set to a known state before
+each random read/write sequence, and the seed is different for read and
+write.  Also, I have coded the ANSI standard random number generator in
+PDB instead of using the C library version to eliminate further compiler
+dependency.
+
+PDB has 2 arguments: file size in MB, and number of blocks per call in
+512-byte increment.  Specifying PDB 1 4 means 1MB file size, and 2048
+bytes block size per call.  There is a limit of maximum block size of
+65024 bytes.  This is a limitation of 16-bit systems, such as DOS, and OS/2
+1.x.  I do not plan to remove this, as many hardware devices may have
+64K DMA transfer limit, so the driver may split a transfer into multiple
+64K chunks.
+
+Here is the help screen of PDB:
+
+Portable Disk Benchmark  V0.01  03/08/94
+
+usage: PDB [File size] [Blocks]
+  File size - File size in MB.  Allowable range: 1 to 32MB.
+  Blocks    - Number of blocks to read/write per I/O call.
+              Each block is 512 bytes.  Allowable range: 1 to 127.
+
+example: pdb 2 4
+
+
+The benchmark test should be run from the root directory of the drive
+under test.  This may not be possible under UNIX systems depending on
+your account access level.
+
+Since this is preliminary code, I'm not providing any test results for
+comparison, so you will have to play with you own.  If you have any
+suggestion, bug report, etc. just put a message on Fidonet OS2 conference,
+or send me email:
+
+CompuServe ID: 70730,401
+Internet:      70730.401@compuserve.com
+
+Good luck in benchmarking!
+Albert Shan
+
+=============================================================================
+Work in progress/wish list:
+- Part 3 of the benchmark will be testing massive amount of files.  I'm
+  planning to use 512 files of 32K each for a total of 16MB.  Will test
+  files creation time, read/write time, and deletion time.
